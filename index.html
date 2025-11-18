@@ -2,58 +2,73 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <title>Inspections sanitaires</title>
+  <title>Inspections sanitaires Arbraska</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="manifest" href="manifest.json">
   <link rel="stylesheet" href="styles.css">
-  <meta name="theme-color" content="#111827">
+  <meta name="theme-color" content="#0b3a2a">
 </head>
 <body>
 <header class="app-header">
-  <div class="app-title">Inspections sanitaires / Sanitary inspections</div>
+  <div class="brand">
+    <div class="brand-logo">A</div>
+    <div class="brand-text">
+      <div class="brand-title">Arbraska</div>
+      <div class="brand-subtitle">Inspections sanitaires</div>
+    </div>
+  </div>
   <div class="app-status">
     <span id="onlineStatus" class="status-dot"></span>
     <span id="onlineText"></span>
   </div>
 </header>
 
+<section class="hero">
+  <h1>Garde le site aussi propre que l'aventure est intense.</h1>
+  <p>Effectue tes rondes, coche chaque élément, ajoute des photos avant/après pour chaque zone. Tout est sauvegardé hors ligne sur l’iPad.</p>
+</section>
+
 <nav class="tabs">
-  <button class="tab-button active" data-tab="new">Nouvelle inspection<br><span>New inspection</span></button>
-  <button class="tab-button" data-tab="list">Historique<br><span>History</span></button>
+  <button class="tab-button active" data-tab="new">Nouvelle inspection</button>
+  <button class="tab-button" data-tab="list">Historique</button>
 </nav>
 
 <main>
-  <!-- New inspection -->
+  <!-- Nouvelle inspection -->
   <section id="tab-new" class="tab-content active">
     <div class="card">
-      <h2>Nouvelle inspection / New inspection</h2>
+      <h2>Nouvelle inspection</h2>
 
-      <label for="inspectorInput">Inspecteur / Inspector</label>
-      <input id="inspectorInput" type="text" placeholder="Nom ou initiales / Name or initials">
+      <label for="inspectorInput">Nom complet de l’inspecteur</label>
+      <input id="inspectorInput" type="text" placeholder="Prénom et nom">
 
-      <label for="washroomSelect">Toilette / Washroom</label>
+      <label for="washroomSelect">Toilette</label>
       <select id="washroomSelect"></select>
       <div id="washroomInfo" class="hint"></div>
 
       <div id="dynamicChecklist" class="fixtures-container"></div>
 
-      <label for="notesInput">Problèmes ou remarques (optionnel) / Issues or notes (optional)</label>
-      <textarea id="notesInput" rows="3" placeholder="Ex.: fuite, manque de papier, odeur, etc. / e.g. leak, missing paper, odor, etc."></textarea>
+      <label for="notesInput">Commentaires / problèmes observés (optionnel)</label>
+      <textarea id="notesInput" rows="3" placeholder="Ex.: fuite, manque de papier, odeur, bris, etc."></textarea>
 
-      <button id="saveInspectionBtn" class="btn primary">Enregistrer l’inspection / Save inspection</button>
+      <button id="saveInspectionBtn" class="btn primary">Enregistrer l’inspection</button>
       <div id="saveMessage" class="hint"></div>
     </div>
   </section>
 
-  <!-- Inspection list -->
+  <!-- Historique -->
   <section id="tab-list" class="tab-content">
     <div class="card">
-      <h2>Historique des inspections / Inspection history</h2>
+      <h2>Historique des inspections</h2>
       <div id="inspectionsSummary" class="hint"></div>
       <div id="inspectionsList" class="inspection-list"></div>
     </div>
   </section>
 </main>
+
+<footer class="app-footer">
+  <span>Arbraska • Module d’inspection interne</span>
+</footer>
 
 <script src="app.js"></script>
 </body>

@@ -1,4 +1,4 @@
-// Configuration (bilingual, per-item checklists, per-item photos)
+// Configuration (FR only, par élément avec photos)
 const CONFIG = {
   washrooms: [
     { id: "W001", name: "Toilette employé", location: "Bâtiment principal", numStalls: 1, numSinks: 1, numUrinals: 0 },
@@ -8,27 +8,27 @@ const CONFIG = {
     { id: "W005", name: "Érablière femme", location: "Érablière", numStalls: 3, numSinks: 2, numUrinals: 0 },
   ],
   checklistItems: [
-    { id: "C001", fr: "Bol et siège de toilette nettoyés", en: "Toilet bowl and seat cleaned", appliesTo: "Cabine / Stall" },
-    { id: "C002", fr: "Base de la toilette et plancher autour propres et secs", en: "Toilet base and surrounding floor clean and dry", appliesTo: "Cabine / Stall" },
-    { id: "C003", fr: "Papier hygiénique disponible", en: "Toilet paper stocked", appliesTo: "Cabine / Stall" },
-    { id: "C004", fr: "Chasse d’eau fonctionnelle", en: "Flush working properly", appliesTo: "Cabine / Stall" },
-    { id: "C005", fr: "Lavabo et robinet nettoyés", en: "Sink and faucet cleaned", appliesTo: "Lavabo / Sink" },
-    { id: "C006", fr: "Savon à main disponible", en: "Hand soap available", appliesTo: "Lavabo / Sink" },
-    { id: "C007", fr: "Essuie-mains / papier en quantité suffisante", en: "Hand towels / paper stocked", appliesTo: "Lavabo / Sink" },
-    { id: "C008", fr: "Miroir propre, sans taches", en: "Mirror clean, no spots", appliesTo: "Lavabo / Sink" },
-    { id: "C009", fr: "Urinoir nettoyé", en: "Urinal cleaned", appliesTo: "Urinoir / Urinal" },
-    { id: "C010", fr: "Bloc ou écran d’urinoir en place", en: "Urinal block/screen in place", appliesTo: "Urinoir / Urinal" },
-    { id: "C011", fr: "Plancher propre et sécuritaire (sans flaques ni débris)", en: "Floor clean and safe (no puddles or debris)", appliesTo: "Général / General" },
-    { id: "C012", fr: "Poubelles vidées, sac changé au besoin", en: "Trash emptied, bag replaced as needed", appliesTo: "Général / General" },
-    { id: "C013", fr: "Poignées de porte, surfaces de contact essuyées", en: "Door handles and touch surfaces wiped", appliesTo: "Général / General" },
-    { id: "C014", fr: "Odeur acceptable", en: "Odor acceptable", appliesTo: "Général / General" },
-    { id: "C015", fr: "Éclairage fonctionnel", en: "Lighting working", appliesTo: "Général / General" },
-    { id: "C016", fr: "Rien de brisé ou dangereux", en: "Nothing broken or unsafe", appliesTo: "Général / General" },
-    { id: "C017", fr: "Vérification visuelle générale satisfaisante", en: "Overall visual check satisfactory", appliesTo: "Tous / All" },
+    { id: "C001", label: "Bol et siège de toilette nettoyés", appliesTo: "Cabine / Stall" },
+    { id: "C002", label: "Base de la toilette et plancher autour propres et secs", appliesTo: "Cabine / Stall" },
+    { id: "C003", label: "Papier hygiénique disponible", appliesTo: "Cabine / Stall" },
+    { id: "C004", label: "Chasse d’eau fonctionnelle", appliesTo: "Cabine / Stall" },
+    { id: "C005", label: "Lavabo et robinet nettoyés", appliesTo: "Lavabo / Sink" },
+    { id: "C006", label: "Savon à main disponible", appliesTo: "Lavabo / Sink" },
+    { id: "C007", label: "Essuie-mains / papier en quantité suffisante", appliesTo: "Lavabo / Sink" },
+    { id: "C008", label: "Miroir propre, sans taches", appliesTo: "Lavabo / Sink" },
+    { id: "C009", label: "Urinoir nettoyé", appliesTo: "Urinoir / Urinal" },
+    { id: "C010", label: "Bloc ou écran d’urinoir en place", appliesTo: "Urinoir / Urinal" },
+    { id: "C011", label: "Plancher propre et sécuritaire (sans flaques ni débris)", appliesTo: "Général / General" },
+    { id: "C012", label: "Poubelles vidées, sac changé au besoin", appliesTo: "Général / General" },
+    { id: "C013", label: "Poignées de porte et surfaces de contact essuyées", appliesTo: "Général / General" },
+    { id: "C014", label: "Odeur acceptable", appliesTo: "Général / General" },
+    { id: "C015", label: "Éclairage fonctionnel", appliesTo: "Général / General" },
+    { id: "C016", label: "Rien de brisé ou dangereux", appliesTo: "Général / General" },
+    { id: "C017", label: "Inspection visuelle générale satisfaisante", appliesTo: "Tous / All" },
   ],
 };
 
-const STORAGE_KEY = "sanitary_inspections_per_item_photos_v1";
+const STORAGE_KEY = "sanitary_inspections_arbraska_v1";
 
 function loadInspections() {
   try {
@@ -49,7 +49,6 @@ function saveInspections(list) {
   }
 }
 
-// Utils
 function formatDateTime(dt) {
   return dt.toLocaleString("fr-CA", {
     year: "numeric",
@@ -90,7 +89,7 @@ const saveMessage = document.getElementById("saveMessage");
 const inspectionsSummary = document.getElementById("inspectionsSummary");
 const inspectionsList = document.getElementById("inspectionsList");
 
-// Tabs
+// Onglets
 tabButtons.forEach(btn => {
   btn.addEventListener("click", () => {
     tabButtons.forEach(b => b.classList.remove("active"));
@@ -105,33 +104,33 @@ tabButtons.forEach(btn => {
   });
 });
 
-// Online/offline
+// En ligne / hors ligne
 function updateOnlineStatus() {
   if (navigator.onLine) {
-    onlineStatusEl.style.backgroundColor = "#16a34a";
-    onlineTextEl.textContent = "En ligne / Online";
+    onlineStatusEl.style.backgroundColor = "#22c55e";
+    onlineTextEl.textContent = "En ligne";
   } else {
-    onlineStatusEl.style.backgroundColor = "#dc2626";
-    onlineTextEl.textContent = "Hors ligne / Offline";
+    onlineStatusEl.style.backgroundColor = "#f97316";
+    onlineTextEl.textContent = "Hors ligne (données enregistrées sur l’iPad)";
   }
 }
 window.addEventListener("online", updateOnlineStatus);
 window.addEventListener("offline", updateOnlineStatus);
 updateOnlineStatus();
 
-// Populate washrooms
+// Remplir la liste des toilettes
 function populateWashrooms() {
   washroomSelect.innerHTML = "";
   CONFIG.washrooms.forEach(w => {
     const opt = document.createElement("option");
     opt.value = w.id;
-    opt.textContent = `${w.name} (${w.location})`;
+    opt.textContent = `${w.name} – ${w.location}`;
     washroomSelect.appendChild(opt);
   });
 }
 populateWashrooms();
 
-// Build dynamic checklist per item, with per-item photos
+// Construire les sections par élément avec photos
 function buildDynamicChecklist() {
   const washroomId = washroomSelect.value;
   const w = CONFIG.washrooms.find(x => x.id === washroomId);
@@ -141,7 +140,7 @@ function buildDynamicChecklist() {
     return;
   }
 
-  washroomInfo.textContent = `Cabines / Stalls: ${w.numStalls} • Lavabos / Sinks: ${w.numSinks} • Urinoirs / Urinals: ${w.numUrinals}`;
+  washroomInfo.textContent = `Cabines : ${w.numStalls} • Lavabos : ${w.numSinks} • Urinoirs : ${w.numUrinals}`;
 
   const stallTasks = CONFIG.checklistItems.filter(i => i.appliesTo === "Cabine / Stall");
   const sinkTasks = CONFIG.checklistItems.filter(i => i.appliesTo === "Lavabo / Sink");
@@ -158,11 +157,11 @@ function buildDynamicChecklist() {
     const header = document.createElement("div");
     header.className = "fixture-group-header";
     const labelType =
-      type === "stall" ? "Cabine / Stall" :
-      type === "sink" ? "Lavabo / Sink" :
-      type === "urinal" ? "Urinoir / Urinal" :
-      "Général / General";
-    header.textContent = `${labelType}${index ? " #" + index : ""}`;
+      type === "stall" ? "Cabine" :
+      type === "sink" ? "Lavabo" :
+      type === "urinal" ? "Urinoir" :
+      "Général";
+    header.textContent = index ? `${labelType} #${index}` : labelType;
     group.appendChild(header);
 
     tasks.forEach(task => {
@@ -172,12 +171,12 @@ function buildDynamicChecklist() {
       div.innerHTML = `
         <input type="checkbox" class="fixture-checkbox" id="${id}"
                data-type="${type}" data-index="${index || 0}" data-task-id="${task.id}">
-        <label for="${id}">${task.fr} / ${task.en}</label>
+        <label for="${id}">${task.label}</label>
       `;
       group.appendChild(div);
     });
 
-    // Photos row (before/after) for this fixture
+    // Photos avant/après pour cet élément
     const photosRow = document.createElement("div");
     photosRow.className = "photos-row";
 
@@ -185,11 +184,11 @@ function buildDynamicChecklist() {
     beforeCol.className = "col";
     const beforeLabel = document.createElement("div");
     beforeLabel.className = "fixture-photo-label";
-    beforeLabel.textContent = "Photo avant / Before";
+    beforeLabel.textContent = "Photo avant";
     const beforeInput = document.createElement("input");
     beforeInput.type = "file";
     beforeInput.accept = "image/*";
-    beforeInput.capture = "environment"; // hint to use camera on iPad
+    beforeInput.capture = "environment"; // ouvre la caméra sur iPad
     beforeInput.className = "fixture-photo-input fixture-photo-before";
     beforeInput.id = `${type}-${index || 0}-before`;
     beforeInput.dataset.type = type;
@@ -201,11 +200,11 @@ function buildDynamicChecklist() {
     afterCol.className = "col";
     const afterLabel = document.createElement("div");
     afterLabel.className = "fixture-photo-label";
-    afterLabel.textContent = "Photo après / After";
+    afterLabel.textContent = "Photo après";
     const afterInput = document.createElement("input");
     afterInput.type = "file";
     afterInput.accept = "image/*";
-    afterInput.capture = "environment"; // hint to use camera on iPad
+    afterInput.capture = "environment";
     afterInput.className = "fixture-photo-input fixture-photo-after";
     afterInput.id = `${type}-${index || 0}-after`;
     afterInput.dataset.type = type;
@@ -220,44 +219,44 @@ function buildDynamicChecklist() {
     return group;
   }
 
-  // Stalls
+  // Cabines
   if (w.numStalls > 0 && stallTasks.length) {
     const title = document.createElement("div");
     title.className = "fixture-section-title";
-    title.textContent = "Cabines / Stalls";
+    title.textContent = "Cabines";
     dynamicChecklist.appendChild(title);
     for (let i = 1; i <= w.numStalls; i++) {
       dynamicChecklist.appendChild(createFixtureGroup("stall", i, stallTasks));
     }
   }
 
-  // Sinks
+  // Lavabos
   if (w.numSinks > 0 && sinkTasks.length) {
     const title = document.createElement("div");
     title.className = "fixture-section-title";
-    title.textContent = "Lavabos / Sinks";
+    title.textContent = "Lavabos";
     dynamicChecklist.appendChild(title);
     for (let i = 1; i <= w.numSinks; i++) {
       dynamicChecklist.appendChild(createFixtureGroup("sink", i, sinkTasks));
     }
   }
 
-  // Urinals
+  // Urinoirs
   if (w.numUrinals > 0 && urinalTasks.length) {
     const title = document.createElement("div");
     title.className = "fixture-section-title";
-    title.textContent = "Urinoirs / Urinals";
+    title.textContent = "Urinoirs";
     dynamicChecklist.appendChild(title);
     for (let i = 1; i <= w.numUrinals; i++) {
       dynamicChecklist.appendChild(createFixtureGroup("urinal", i, urinalTasks));
     }
   }
 
-  // General
+  // Général
   if (generalTasks.length) {
     const title = document.createElement("div");
     title.className = "fixture-section-title";
-    title.textContent = "Général / General";
+    title.textContent = "Général";
     dynamicChecklist.appendChild(title);
     dynamicChecklist.appendChild(createFixtureGroup("general", 0, generalTasks));
   }
@@ -266,24 +265,24 @@ function buildDynamicChecklist() {
 washroomSelect.addEventListener("change", buildDynamicChecklist);
 buildDynamicChecklist();
 
-// Save inspection with validation: all components required
+// Sauvegarde avec validations
 saveInspectionBtn.addEventListener("click", async () => {
   const inspector = inspectorInput.value.trim();
   const washroomId = washroomSelect.value;
   const notes = notesInput.value.trim();
 
   if (!washroomId) {
-    saveMessage.textContent = "Veuillez choisir une toilette. / Please select a washroom.";
+    saveMessage.textContent = "Veuillez choisir une toilette.";
     return;
   }
   if (!inspector) {
-    saveMessage.textContent = "Veuillez entrer le nom de l’inspecteur. / Please enter the inspector name.";
+    saveMessage.textContent = "Veuillez entrer le nom complet de l’inspecteur.";
     return;
   }
 
   const w = CONFIG.washrooms.find(x => x.id === washroomId);
   if (!w) {
-    saveMessage.textContent = "Toilette invalide. / Invalid washroom.";
+    saveMessage.textContent = "Toilette invalide.";
     return;
   }
 
@@ -300,41 +299,41 @@ saveInspectionBtn.addEventListener("click", async () => {
       .map(cb => cb.dataset.taskId);
   }
 
-  // Validate stalls
+  // Valider cabines
   for (let i = 1; i <= w.numStalls; i++) {
     const checked = getChecked("stall", i);
     if (checked.length < stallTasks.length) {
-      saveMessage.textContent = `Toutes les tâches doivent être cochées pour la cabine #${i}. / All tasks must be checked for stall #${i}.`;
+      saveMessage.textContent = `Toutes les tâches doivent être cochées pour la cabine #${i}.`;
       return;
     }
   }
 
-  // Validate sinks
+  // Valider lavabos
   for (let i = 1; i <= w.numSinks; i++) {
     const checked = getChecked("sink", i);
     if (checked.length < sinkTasks.length) {
-      saveMessage.textContent = `Toutes les tâches doivent être cochées pour le lavabo #${i}. / All tasks must be checked for sink #${i}.`;
+      saveMessage.textContent = `Toutes les tâches doivent être cochées pour le lavabo #${i}.`;
       return;
     }
   }
 
-  // Validate urinals
+  // Valider urinoirs
   for (let i = 1; i <= w.numUrinals; i++) {
     const checked = getChecked("urinal", i);
     if (checked.length < urinalTasks.length) {
-      saveMessage.textContent = `Toutes les tâches doivent être cochées pour l’urinoir #${i}. / All tasks must be checked for urinal #${i}.`;
+      saveMessage.textContent = `Toutes les tâches doivent être cochées pour l’urinoir #${i}.`;
       return;
     }
   }
 
-  // Validate general
+  // Valider général
   const generalChecked = getChecked("general", 0);
   if (generalTasks.length && generalChecked.length < generalTasks.length) {
-    saveMessage.textContent = "Toutes les tâches générales doivent être cochées. / All general tasks must be checked.";
+    saveMessage.textContent = "Toutes les tâches générales doivent être cochées.";
     return;
   }
 
-  // Collect photos per fixture
+  // Récupérer les photos par élément
   async function getPhotosFor(type, index) {
     const beforeInput = document.getElementById(`${type}-${index}-before`);
     const afterInput = document.getElementById(`${type}-${index}-after`);
@@ -400,19 +399,19 @@ saveInspectionBtn.addEventListener("click", async () => {
   list.push(inspection);
   saveInspections(list);
 
-  saveMessage.textContent = "Inspection enregistrée localement. / Inspection saved locally.";
+  saveMessage.textContent = "Inspection enregistrée sur cet appareil.";
   setTimeout(() => (saveMessage.textContent = ""), 3000);
 
-  // Reset fields
+  // Réinitialiser
   notesInput.value = "";
   document.querySelectorAll(".fixture-checkbox").forEach(cb => (cb.checked = false));
   document.querySelectorAll(".fixture-photo-input").forEach(inp => (inp.value = ""));
 });
 
-// Render inspections list
+// Afficher l'historique
 function renderInspectionsList() {
   const list = loadInspections();
-  inspectionsSummary.textContent = `${list.length} inspection(s) enregistrée(s) sur cet appareil. / ${list.length} inspection(s) saved on this device.`;
+  inspectionsSummary.textContent = `${list.length} inspection(s) enregistrée(s) sur cet iPad.`;
 
   inspectionsList.innerHTML = "";
   const sorted = [...list].sort((a, b) => new Date(b.dateTime) - new Date(a.dateTime));
@@ -424,28 +423,26 @@ function renderInspectionsList() {
     const stallCount = item.stalls ? item.stalls.length : 0;
     const sinkCount = item.sinks ? item.sinks.length : 0;
     const urinalCount = item.urinals ? item.urinals.length : 0;
-    const generalCount = item.generalTasks ? item.generalTasks.length : 0;
 
     const div = document.createElement("div");
     div.className = "inspection-item";
     div.innerHTML = `
       <strong>${formatDateTime(dt)} – ${washroomName}</strong>
-      <div>Inspecteur / Inspector : ${item.inspector}</div>
-      <div>Cabines / Stalls inspectées : ${stallCount}</div>
-      <div>Lavabos / Sinks inspectés : ${sinkCount}</div>
-      <div>Urinoirs / Urinals inspectés : ${urinalCount}</div>
-      <div>Tâches générales complétées : ${generalCount}</div>
-      <div>Notes : ${item.notes || "Aucune / None"}</div>
+      <div>Inspecteur : ${item.inspector}</div>
+      <div>Cabines inspectées : ${stallCount}</div>
+      <div>Lavabos inspectés : ${sinkCount}</div>
+      <div>Urinoirs inspectés : ${urinalCount}</div>
+      <div>Commentaires : ${item.notes || "Aucun"}</div>
     `;
     inspectionsList.appendChild(div);
   });
 }
 
-// PWA: register service worker if available
+// PWA : service worker
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
     navigator.serviceWorker
       .register("service-worker.js")
-      .catch(err => console.log("SW registration failed", err));
+      .catch(err => console.log("Échec de l’enregistrement du service worker", err));
   });
 }

@@ -1,10 +1,10 @@
 {
-  "name": "Inspections sanitaires",
+  "name": "Inspections sanitaires Arbraska",
   "short_name": "Inspections",
   "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#111827",
-  "theme_color": "#111827",
+  "background_color": "#0b3a2a",
+  "theme_color": "#0b3a2a",
   "icons": [
     {
       "src": "icon-192.png",
