@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Inspections sanitaires</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="styles.css">
+  <meta name="theme-color" content="#111827">
+</head>
+<body>
+<header class="app-header">
+  <div class="app-title">Inspections sanitaires / Sanitary inspections</div>
+  <div class="app-status">
+    <span id="onlineStatus" class="status-dot"></span>
+    <span id="onlineText"></span>
+  </div>
+</header>
+
+<nav class="tabs">
+  <button class="tab-button active" data-tab="new">Nouvelle inspection<br><span>New inspection</span></button>
+  <button class="tab-button" data-tab="list">Inspections<br><span>History</span></button>
+</nav>
+
+<main>
+  <!-- New inspection -->
+  <section id="tab-new" class="tab-content active">
+    <div class="card">
+      <h2>Nouvelle inspection / New inspection</h2>
+
+      <label for="inspectorInput">Inspecteur / Inspector</label>
+      <input id="inspectorInput" type="text" placeholder="Nom ou initiales / Name or initials">
+
+      <label for="washroomSelect">Toilette / Washroom</label>
+      <select id="washroomSelect"></select>
+
+      <div class="row">
+        <div class="col">
+          <label for="areaTypeSelect">Zone / Area</label>
+          <select id="areaTypeSelect">
+            <option value="Cabine / Stall">Cabine / Stall</option>
+            <option value="Lavabo / Sink">Lavabo / Sink</option>
+            <option value="Urinoir / Urinal">Urinoir / Urinal</option>
+            <option value="Général / General">Général / General</option>
+          </select>
+        </div>
+        <div class="col">
+          <label for="areaNumberInput">Numéro (cabine, lavabo, etc.)<br><span>Number (stall, sink, etc.)</span></label>
+          <input id="areaNumberInput" type="number" min="1" placeholder="Laisser vide pour général / Leave blank for general">
+        </div>
+      </div>
+
+      <div id="areaHint" class="hint"></div>
+
+      <label>Tâches à effectuer / Tasks to complete</label>
+      <div id="checklistContainer" class="checklist"></div>
+
+      <label for="notesInput">Problèmes ou remarques / Issues or notes</label>
+      <textarea id="notesInput" rows="3" placeholder="Ex.: fuite, manque de papier, odeur, etc. / e.g. leak, missing paper, odor, etc."></textarea>
+
+      <div class="row">
+        <div class="col">
+          <label for="beforePhotoInput">Photo avant / Before photo</label>
+          <input id="beforePhotoInput" type="file" accept="image/*" capture="environment">
+        </div>
+        <div class="col">
+          <label for="afterPhotoInput">Photo après / After photo</label>
+          <input id="afterPhotoInput" type="file" accept="image/*" capture="environment">
+        </div>
+      </div>
+
+      <button id="saveInspectionBtn" class="btn primary">Enregistrer l’inspection / Save inspection</button>
+      <div id="saveMessage" class="hint"></div>
+    </div>
+  </section>
+
+  <!-- Inspection list -->
+  <section id="tab-list" class="tab-content">
+    <div class="card">
+      <h2>Historique des inspections / Inspection history</h2>
+      <div id="inspectionsSummary" class="hint"></div>
+      <div id="inspectionsList" class="inspection-list"></div>
+    </div>
+  </section>
+</main>
+
+<script src="app.js"></script>
+</body>
+</html>
