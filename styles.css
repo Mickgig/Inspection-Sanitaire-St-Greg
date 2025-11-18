@@ -149,6 +149,7 @@ label {
 }
 
 input[type="text"],
+input[type="password"],
 select,
 textarea {
   width: 100%;
@@ -286,11 +287,30 @@ textarea {
   filter: brightness(0.96);
 }
 
+.btn.secondary {
+  background: #e5e7eb;
+  color: #111827;
+}
+
+.btn.secondary:active {
+  transform: translateY(1px);
+  filter: brightness(0.96);
+}
+
 .app-footer {
   padding: 0.7rem 1.1rem 1rem;
   font-size: 0.72rem;
   color: #9ca3af;
   text-align: center;
+}
+
+/* PIN change section */
+
+.pin-change h3 {
+  margin-top: 0.5rem;
+  margin-bottom: 0.4rem;
+  font-size: 0.95rem;
+  color: #0f172a;
 }
 
 /* TABS VISIBILITY */

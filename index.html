@@ -25,7 +25,7 @@
 
 <section class="hero">
   <h1>Aidez-nous à garder le site propre</h1>
-  <p>Effectue tes rondes, coche chaque élément et ajoute des photos avant/après pour chaque zone. Tout est sauvegardé hors ligne.</p>
+  <p>Effectue tes rondes, coche chaque élément et ajoute des photos avant/après pour chaque zone. Tout est sauvegardé hors ligne sur l’iPad.</p>
 </section>
 
 <nav class="tabs">
@@ -69,12 +69,31 @@
       <h2>Vue superviseur</h2>
       <div id="supervisorStats" class="hint"></div>
       <div id="supervisorCharts"></div>
+
+      <hr style="margin: 1rem 0; border: none; border-top: 1px solid #e5e7eb;">
+
+      <div class="pin-change">
+        <h3>Code superviseur</h3>
+        <p class="hint">Contrôle l’accès à l’historique et à cette vue.</p>
+
+        <label for="oldPinInput">Code actuel</label>
+        <input id="oldPinInput" type="password" inputmode="numeric" autocomplete="off">
+
+        <label for="newPinInput">Nouveau code</label>
+        <input id="newPinInput" type="password" inputmode="numeric" autocomplete="off">
+
+        <label for="newPinConfirmInput">Confirmer le nouveau code</label>
+        <input id="newPinConfirmInput" type="password" inputmode="numeric" autocomplete="off">
+
+        <button id="changePinBtn" class="btn secondary">Changer le code</button>
+        <div id="changePinMessage" class="hint"></div>
+      </div>
     </div>
   </section>
 </main>
 
 <footer class="app-footer">
-  <span>Arbraska • Module d’inspection interne • Version 2.0 (2025-11-18)</span>
+  <span>Arbraska • Module d’inspection interne • Version 2.1 (2025-11-18)</span>
 </footer>
 
 <script src="app.js"></script>

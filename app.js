@@ -31,10 +31,35 @@ const CONFIG = {
 const STORAGE_KEY = "sanitary_inspections_arbraska_v2";
 const SYNC_QUEUE_KEY = "sanitary_inspections_sync_queue_v2";
 
-// Put your Azure Function URL here later
+// Azure / OneDrive backend URL (to set later)
 const BACKEND_URL = "PASTE_YOUR_BACKEND_URL_HERE";
 
+// Supervisor PIN storage
+const PIN_STORAGE_KEY = "sanitary_supervisor_pin_v1";
+const DEFAULT_SUPERVISOR_PIN = "4285"; // change default if you want
+let supervisorUnlocked = false;
+let supervisorPin = loadSupervisorPin();
+
 let currentInspectionStart = null;
+
+function loadSupervisorPin() {
+  try {
+    const stored = localStorage.getItem(PIN_STORAGE_KEY);
+    return stored || DEFAULT_SUPERVISOR_PIN;
+  } catch (e) {
+    console.error(e);
+    return DEFAULT_SUPERVISOR_PIN;
+  }
+}
+
+function saveSupervisorPin(newPin) {
+  try {
+    localStorage.setItem(PIN_STORAGE_KEY, newPin);
+    supervisorPin = newPin;
+  } catch (e) {
+    console.error(e);
+  }
+}
 
 function loadInspections() {
   try {
@@ -146,18 +171,36 @@ const inspectionsList = document.getElementById("inspectionsList");
 const supervisorStats = document.getElementById("supervisorStats");
 const supervisorCharts = document.getElementById("supervisorCharts");
 
-// Tabs
+const oldPinInput = document.getElementById("oldPinInput");
+const newPinInput = document.getElementById("newPinInput");
+const newPinConfirmInput = document.getElementById("newPinConfirmInput");
+const changePinBtn = document.getElementById("changePinBtn");
+const changePinMessage = document.getElementById("changePinMessage");
+
+// Tabs with PIN protection on history + supervisor
 tabButtons.forEach(btn => {
   btn.addEventListener("click", () => {
+    const targetTab = btn.dataset.tab;
+
+    if ((targetTab === "list" || targetTab === "supervisor") && !supervisorUnlocked) {
+      const entered = prompt("Code superviseur requis :");
+      if (entered !== supervisorPin) {
+        alert("Code invalide.");
+        return;
+      }
+      supervisorUnlocked = true;
+    }
+
     tabButtons.forEach(b => b.classList.remove("active"));
     btn.classList.add("active");
-    const tab = btn.dataset.tab;
+
     tabContents.forEach(c => {
-      c.classList.toggle("active", c.id === "tab-" + tab);
+      c.classList.toggle("active", c.id === "tab-" + targetTab);
     });
-    if (tab === "list") {
+
+    if (targetTab === "list") {
       renderInspectionsList();
-    } else if (tab === "supervisor") {
+    } else if (targetTab === "supervisor") {
       renderSupervisorView();
     }
   });
@@ -284,7 +327,6 @@ function buildDynamicChecklist() {
     return group;
   }
 
-  // Sections
   if (w.numStalls > 0 && stallTasks.length) {
     const title = document.createElement("div");
     title.className = "fixture-section-title";
@@ -327,7 +369,7 @@ function buildDynamicChecklist() {
 washroomSelect.addEventListener("change", buildDynamicChecklist);
 buildDynamicChecklist();
 
-// Save
+// Save inspection
 saveInspectionBtn.addEventListener("click", async () => {
   const inspector = inspectorInput.value.trim();
   const washroomId = washroomSelect.value;
@@ -361,7 +403,7 @@ saveInspectionBtn.addEventListener("click", async () => {
       .map(cb => cb.dataset.taskId);
   }
 
-  // Validate
+  // Validate all required tasks
   for (let i = 1; i <= w.numStalls; i++) {
     const checked = getChecked("stall", i);
     if (checked.length < stallTasks.length) {
@@ -639,6 +681,45 @@ function renderSupervisorView() {
   });
 
   supervisorCharts.appendChild(chart);
+}
+
+// Change PIN logic
+if (changePinBtn) {
+  changePinBtn.addEventListener("click", () => {
+    const oldPin = (oldPinInput.value || "").trim();
+    const newPin = (newPinInput.value || "").trim();
+    const confirmPin = (newPinConfirmInput.value || "").trim();
+
+    changePinMessage.textContent = "";
+
+    if (!oldPin || !newPin || !confirmPin) {
+      changePinMessage.textContent = "Veuillez remplir tous les champs.";
+      return;
+    }
+
+    if (oldPin !== supervisorPin) {
+      changePinMessage.textContent = "Code actuel incorrect.";
+      return;
+    }
+
+    if (newPin.length < 4) {
+      changePinMessage.textContent = "Le nouveau code doit contenir au moins 4 chiffres.";
+      return;
+    }
+
+    if (newPin !== confirmPin) {
+      changePinMessage.textContent = "Les codes ne correspondent pas.";
+      return;
+    }
+
+    saveSupervisorPin(newPin);
+    supervisorUnlocked = true;
+    changePinMessage.textContent = "Code superviseur mis à jour.";
+
+    oldPinInput.value = "";
+    newPinInput.value = "";
+    newPinConfirmInput.value = "";
+  });
 }
 
 // PWA service worker
