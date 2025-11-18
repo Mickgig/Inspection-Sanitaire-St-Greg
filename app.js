@@ -1,4 +1,4 @@
-// Configuration (FR only, par élément avec photos)
+// Configuration (FR seulement, par élément avec photos)
 const CONFIG = {
   washrooms: [
     { id: "W001", name: "Toilette employé", location: "Bâtiment principal", numStalls: 1, numSinks: 1, numUrinals: 0 },
@@ -28,7 +28,7 @@ const CONFIG = {
   ],
 };
 
-const STORAGE_KEY = "sanitary_inspections_arbraska_v1";
+const STORAGE_KEY = "sanitary_inspections_arbraska_logo_v1";
 
 function loadInspections() {
   try {
@@ -72,7 +72,7 @@ function base64FromFile(file) {
   });
 }
 
-// DOM elements
+// Éléments DOM
 const tabButtons = document.querySelectorAll(".tab-button");
 const tabContents = document.querySelectorAll(".tab-content");
 const onlineStatusEl = document.getElementById("onlineStatus");
@@ -111,7 +111,7 @@ function updateOnlineStatus() {
     onlineTextEl.textContent = "En ligne";
   } else {
     onlineStatusEl.style.backgroundColor = "#f97316";
-    onlineTextEl.textContent = "Hors ligne (données enregistrées sur l’iPad)";
+    onlineTextEl.textContent = "Hors ligne (données sur l’iPad)";
   }
 }
 window.addEventListener("online", updateOnlineStatus);

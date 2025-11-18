@@ -1,10 +1,12 @@
-const CACHE_NAME = "sanitary-inspection-arbraska-v1";
+const CACHE_NAME = "sanitary-inspection-arbraska-logo-v1";
 const ASSETS = [
   "./",
   "./index.html",
   "./styles.css",
   "./app.js",
   "./manifest.json",
+  "./upla-logo.png",
+  "./arbraska-logo.png",
   "./icon-192.png",
   "./icon-512.png"
 ];

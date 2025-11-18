@@ -28,17 +28,13 @@ body {
   gap: 0.55rem;
 }
 
-.brand-logo {
-  width: 32px;
+.brand-logo-img {
   height: 32px;
+  width: auto;
+  object-fit: contain;
+  background: #ecfdf5;
   border-radius: 999px;
-  background: radial-gradient(circle at 30% 30%, #bbf7d0, #047857);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 800;
-  font-size: 1rem;
-  color: #022c22;
+  padding: 2px 6px;
 }
 
 .brand-text {
@@ -54,7 +50,7 @@ body {
 
 .brand-subtitle {
   font-size: 0.75rem;
-  opacity: 0.85;
+  opacity: 0.9;
 }
 
 .app-status {

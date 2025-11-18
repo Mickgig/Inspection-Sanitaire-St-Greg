@@ -1,6 +1,6 @@
 {
-  "name": "Inspections sanitaires Arbraska",
-  "short_name": "Inspections",
+  "name": "Uplà – Inspections sanitaires",
+  "short_name": "Uplà Inspect.",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#0b3a2a",
