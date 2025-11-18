@@ -1,5 +1,5 @@
 {
-  "name": "Arbraska \u2013 Inspections sanitaires",
+  "name": "Arbraska – Inspections sanitaires",
   "short_name": "Arbraska Inspect.",
   "start_url": "./index.html",
   "display": "standalone",
@@ -16,6 +16,5 @@
       "sizes": "512x512",
       "type": "image/png"
     }
-  ],
-  "splash_pages": null
+  ]
 }

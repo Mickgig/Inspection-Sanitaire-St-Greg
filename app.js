@@ -1,4 +1,4 @@
-// Configuration (FR seulement, par élément avec photos)
+// Configuration (FR only)
 const CONFIG = {
   washrooms: [
     { id: "W001", name: "Toilette employé", location: "Bâtiment principal", numStalls: 1, numSinks: 1, numUrinals: 0 },
@@ -28,7 +28,13 @@ const CONFIG = {
   ],
 };
 
-const STORAGE_KEY = "sanitary_inspections_arbraska_logo_v1";
+const STORAGE_KEY = "sanitary_inspections_arbraska_v2";
+const SYNC_QUEUE_KEY = "sanitary_inspections_sync_queue_v2";
+
+// Put your Azure Function URL here later
+const BACKEND_URL = "PASTE_YOUR_BACKEND_URL_HERE";
+
+let currentInspectionStart = null;
 
 function loadInspections() {
   try {
@@ -47,6 +53,55 @@ function saveInspections(list) {
   } catch (e) {
     console.error(e);
   }
+}
+
+function loadSyncQueue() {
+  try {
+    const raw = localStorage.getItem(SYNC_QUEUE_KEY);
+    if (!raw) return [];
+    return JSON.parse(raw);
+  } catch (e) {
+    console.error(e);
+    return [];
+  }
+}
+
+function saveSyncQueue(queue) {
+  try {
+    localStorage.setItem(SYNC_QUEUE_KEY, JSON.stringify(queue));
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+function queueForSync(item) {
+  const queue = loadSyncQueue();
+  queue.push(item);
+  saveSyncQueue(queue);
+}
+
+async function trySyncQueue() {
+  if (!navigator.onLine) return;
+  if (!BACKEND_URL || BACKEND_URL === "PASTE_YOUR_BACKEND_URL_HERE") return;
+
+  const queue = loadSyncQueue();
+  if (!queue.length) return;
+
+  const remaining = [];
+  for (const item of queue) {
+    try {
+      const res = await fetch(BACKEND_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(item),
+      });
+      if (!res.ok) throw new Error("HTTP " + res.status);
+    } catch (err) {
+      console.error("Sync failed for", item.id, err);
+      remaining.push(item);
+    }
+  }
+  saveSyncQueue(remaining);
 }
 
 function formatDateTime(dt) {
@@ -72,7 +127,7 @@ function base64FromFile(file) {
   });
 }
 
-// Éléments DOM
+// DOM refs
 const tabButtons = document.querySelectorAll(".tab-button");
 const tabContents = document.querySelectorAll(".tab-content");
 const onlineStatusEl = document.getElementById("onlineStatus");
@@ -88,8 +143,10 @@ const saveMessage = document.getElementById("saveMessage");
 
 const inspectionsSummary = document.getElementById("inspectionsSummary");
 const inspectionsList = document.getElementById("inspectionsList");
+const supervisorStats = document.getElementById("supervisorStats");
+const supervisorCharts = document.getElementById("supervisorCharts");
 
-// Onglets
+// Tabs
 tabButtons.forEach(btn => {
   btn.addEventListener("click", () => {
     tabButtons.forEach(b => b.classList.remove("active"));
@@ -100,11 +157,13 @@ tabButtons.forEach(btn => {
     });
     if (tab === "list") {
       renderInspectionsList();
+    } else if (tab === "supervisor") {
+      renderSupervisorView();
     }
   });
 });
 
-// En ligne / hors ligne
+// Online / offline
 function updateOnlineStatus() {
   if (navigator.onLine) {
     onlineStatusEl.style.backgroundColor = "#22c55e";
@@ -114,11 +173,15 @@ function updateOnlineStatus() {
     onlineTextEl.textContent = "Hors ligne (données sur l’iPad)";
   }
 }
-window.addEventListener("online", updateOnlineStatus);
+
+window.addEventListener("online", () => {
+  updateOnlineStatus();
+  trySyncQueue();
+});
 window.addEventListener("offline", updateOnlineStatus);
 updateOnlineStatus();
 
-// Remplir la liste des toilettes
+// Washrooms
 function populateWashrooms() {
   washroomSelect.innerHTML = "";
   CONFIG.washrooms.forEach(w => {
@@ -130,8 +193,10 @@ function populateWashrooms() {
 }
 populateWashrooms();
 
-// Construire les sections par élément avec photos
+// Dynamic checklist
 function buildDynamicChecklist() {
+  currentInspectionStart = new Date().toISOString();
+
   const washroomId = washroomSelect.value;
   const w = CONFIG.washrooms.find(x => x.id === washroomId);
   if (!w) {
@@ -154,6 +219,7 @@ function buildDynamicChecklist() {
     group.className = "fixture-group";
     group.dataset.type = type;
     group.dataset.index = String(index);
+
     const header = document.createElement("div");
     header.className = "fixture-group-header";
     const labelType =
@@ -176,7 +242,6 @@ function buildDynamicChecklist() {
       group.appendChild(div);
     });
 
-    // Photos avant/après pour cet élément
     const photosRow = document.createElement("div");
     photosRow.className = "photos-row";
 
@@ -188,7 +253,7 @@ function buildDynamicChecklist() {
     const beforeInput = document.createElement("input");
     beforeInput.type = "file";
     beforeInput.accept = "image/*";
-    beforeInput.capture = "environment"; // ouvre la caméra sur iPad
+    beforeInput.capture = "environment";
     beforeInput.className = "fixture-photo-input fixture-photo-before";
     beforeInput.id = `${type}-${index || 0}-before`;
     beforeInput.dataset.type = type;
@@ -219,7 +284,7 @@ function buildDynamicChecklist() {
     return group;
   }
 
-  // Cabines
+  // Sections
   if (w.numStalls > 0 && stallTasks.length) {
     const title = document.createElement("div");
     title.className = "fixture-section-title";
@@ -230,7 +295,6 @@ function buildDynamicChecklist() {
     }
   }
 
-  // Lavabos
   if (w.numSinks > 0 && sinkTasks.length) {
     const title = document.createElement("div");
     title.className = "fixture-section-title";
@@ -241,7 +305,6 @@ function buildDynamicChecklist() {
     }
   }
 
-  // Urinoirs
   if (w.numUrinals > 0 && urinalTasks.length) {
     const title = document.createElement("div");
     title.className = "fixture-section-title";
@@ -252,7 +315,6 @@ function buildDynamicChecklist() {
     }
   }
 
-  // Général
   if (generalTasks.length) {
     const title = document.createElement("div");
     title.className = "fixture-section-title";
@@ -265,7 +327,7 @@ function buildDynamicChecklist() {
 washroomSelect.addEventListener("change", buildDynamicChecklist);
 buildDynamicChecklist();
 
-// Sauvegarde avec validations
+// Save
 saveInspectionBtn.addEventListener("click", async () => {
   const inspector = inspectorInput.value.trim();
   const washroomId = washroomSelect.value;
@@ -295,11 +357,11 @@ saveInspectionBtn.addEventListener("click", async () => {
 
   function getChecked(type, index) {
     return checkboxes
-      .filter(cb => cb.dataset.type === type && String(cb.dataset.index) == String(index) && cb.checked)
+      .filter(cb => cb.dataset.type === type && String(cb.dataset.index) === String(index) && cb.checked)
       .map(cb => cb.dataset.taskId);
   }
 
-  // Valider cabines
+  // Validate
   for (let i = 1; i <= w.numStalls; i++) {
     const checked = getChecked("stall", i);
     if (checked.length < stallTasks.length) {
@@ -308,7 +370,6 @@ saveInspectionBtn.addEventListener("click", async () => {
     }
   }
 
-  // Valider lavabos
   for (let i = 1; i <= w.numSinks; i++) {
     const checked = getChecked("sink", i);
     if (checked.length < sinkTasks.length) {
@@ -317,7 +378,6 @@ saveInspectionBtn.addEventListener("click", async () => {
     }
   }
 
-  // Valider urinoirs
   for (let i = 1; i <= w.numUrinals; i++) {
     const checked = getChecked("urinal", i);
     if (checked.length < urinalTasks.length) {
@@ -326,14 +386,12 @@ saveInspectionBtn.addEventListener("click", async () => {
     }
   }
 
-  // Valider général
   const generalChecked = getChecked("general", 0);
   if (generalTasks.length && generalChecked.length < generalTasks.length) {
     saveMessage.textContent = "Toutes les tâches générales doivent être cochées.";
     return;
   }
 
-  // Récupérer les photos par élément
   async function getPhotosFor(type, index) {
     const beforeInput = document.getElementById(`${type}-${index}-before`);
     const afterInput = document.getElementById(`${type}-${index}-after`);
@@ -345,6 +403,11 @@ saveInspectionBtn.addEventListener("click", async () => {
     ]);
     return { beforePhoto: beforeBase64, afterPhoto: afterBase64 };
   }
+
+  const endTime = new Date();
+  const startTime = currentInspectionStart ? new Date(currentInspectionStart) : endTime;
+  const durationMs = endTime - startTime;
+  const durationSeconds = Math.round(durationMs / 1000);
 
   const stalls = [];
   for (let i = 1; i <= w.numStalls; i++) {
@@ -383,7 +446,7 @@ saveInspectionBtn.addEventListener("click", async () => {
 
   const inspection = {
     id: "I_" + Date.now(),
-    dateTime: new Date().toISOString(),
+    dateTime: endTime.toISOString(),
     inspector,
     washroomId,
     stalls,
@@ -393,7 +456,65 @@ saveInspectionBtn.addEventListener("click", async () => {
     generalBeforePhoto: generalPhotos.beforePhoto,
     generalAfterPhoto: generalPhotos.afterPhoto,
     notes,
+    startTime: startTime.toISOString(),
+    endTime: endTime.toISOString(),
+    durationSeconds,
   };
+
+  const photosForServer = [];
+
+  stalls.forEach(s => {
+    photosForServer.push({
+      fixtureType: "Cabine",
+      fixtureIndex: s.index,
+      beforePhoto: s.beforePhoto,
+      afterPhoto: s.afterPhoto,
+    });
+  });
+
+  sinks.forEach(s => {
+    photosForServer.push({
+      fixtureType: "Lavabo",
+      fixtureIndex: s.index,
+      beforePhoto: s.beforePhoto,
+      afterPhoto: s.afterPhoto,
+    });
+  });
+
+  urinals.forEach(u => {
+    photosForServer.push({
+      fixtureType: "Urinoir",
+      fixtureIndex: u.index,
+      beforePhoto: u.beforePhoto,
+      afterPhoto: u.afterPhoto,
+    });
+  });
+
+  photosForServer.push({
+    fixtureType: "General",
+    fixtureIndex: 0,
+    beforePhoto: generalPhotos.beforePhoto,
+    afterPhoto: generalPhotos.afterPhoto,
+  });
+
+  const summaryForServer = {
+    id: inspection.id,
+    dateTime: inspection.dateTime,
+    inspector,
+    washroomId,
+    washroomName: w ? w.name : washroomId,
+    stallsCount: stalls.length,
+    sinksCount: sinks.length,
+    urinalsCount: urinals.length,
+    notes,
+    startTime: inspection.startTime,
+    endTime: inspection.endTime,
+    durationSeconds: inspection.durationSeconds,
+    photos: photosForServer,
+  };
+
+  queueForSync(summaryForServer);
+  trySyncQueue();
 
   const list = loadInspections();
   list.push(inspection);
@@ -402,13 +523,12 @@ saveInspectionBtn.addEventListener("click", async () => {
   saveMessage.textContent = "Inspection enregistrée sur cet appareil.";
   setTimeout(() => (saveMessage.textContent = ""), 3000);
 
-  // Réinitialiser
   notesInput.value = "";
   document.querySelectorAll(".fixture-checkbox").forEach(cb => (cb.checked = false));
   document.querySelectorAll(".fixture-photo-input").forEach(inp => (inp.value = ""));
 });
 
-// Afficher l'historique
+// History
 function renderInspectionsList() {
   const list = loadInspections();
   inspectionsSummary.textContent = `${list.length} inspection(s) enregistrée(s) sur cet iPad.`;
@@ -423,6 +543,7 @@ function renderInspectionsList() {
     const stallCount = item.stalls ? item.stalls.length : 0;
     const sinkCount = item.sinks ? item.sinks.length : 0;
     const urinalCount = item.urinals ? item.urinals.length : 0;
+    const durationMin = item.durationSeconds ? Math.round(item.durationSeconds / 60) : null;
 
     const div = document.createElement("div");
     div.className = "inspection-item";
@@ -432,13 +553,95 @@ function renderInspectionsList() {
       <div>Cabines inspectées : ${stallCount}</div>
       <div>Lavabos inspectés : ${sinkCount}</div>
       <div>Urinoirs inspectés : ${urinalCount}</div>
+      <div>Durée : ${durationMin !== null ? durationMin + " min" : "N/D"}</div>
       <div>Commentaires : ${item.notes || "Aucun"}</div>
     `;
     inspectionsList.appendChild(div);
   });
 }
 
-// PWA : service worker
+// Supervisor view
+function renderSupervisorView() {
+  const list = loadInspections();
+  supervisorCharts.innerHTML = "";
+
+  if (!list.length) {
+    supervisorStats.textContent = "Aucune inspection enregistrée sur cet appareil.";
+    return;
+  }
+
+  const byWashroom = {};
+  let totalDuration = 0;
+  let durationCount = 0;
+
+  list.forEach(i => {
+    const w = CONFIG.washrooms.find(x => x.id === i.washroomId);
+    const name = w ? w.name : i.washroomId;
+    if (!byWashroom[name]) {
+      byWashroom[name] = { count: 0, totalDuration: 0, hasDuration: 0 };
+    }
+    byWashroom[name].count += 1;
+    if (typeof i.durationSeconds === "number") {
+      byWashroom[name].totalDuration += i.durationSeconds;
+      byWashroom[name].hasDuration += 1;
+      totalDuration += i.durationSeconds;
+      durationCount += 1;
+    }
+  });
+
+  const total = list.length;
+  const avgDurationSec = durationCount ? totalDuration / durationCount : 0;
+  const avgDurationMin = Math.round(avgDurationSec / 60);
+
+  supervisorStats.textContent =
+    `Total inspections : ${total} – durée moyenne : ${avgDurationMin} min`;
+
+  const maxCount = Math.max(...Object.values(byWashroom).map(v => v.count));
+  const chart = document.createElement("div");
+  chart.style.display = "flex";
+  chart.style.flexDirection = "column";
+  chart.style.gap = "0.4rem";
+  chart.style.marginTop = "0.7rem";
+
+  Object.entries(byWashroom).forEach(([name, v]) => {
+    const row = document.createElement("div");
+    row.style.display = "flex";
+    row.style.alignItems = "center";
+    row.style.gap = "0.4rem";
+
+    const label = document.createElement("div");
+    label.style.width = "150px";
+    label.style.fontSize = "0.8rem";
+    label.textContent = name;
+
+    const barWrapper = document.createElement("div");
+    barWrapper.style.flex = "1";
+    barWrapper.style.height = "12px";
+    barWrapper.style.background = "#e5e7eb";
+    barWrapper.style.borderRadius = "999px";
+
+    const bar = document.createElement("div");
+    bar.style.height = "100%";
+    bar.style.borderRadius = "999px";
+    bar.style.background = "#22c55e";
+    bar.style.width = `${(v.count / maxCount) * 100}%`;
+
+    const countLabel = document.createElement("div");
+    countLabel.style.width = "40px";
+    countLabel.style.fontSize = "0.8rem";
+    countLabel.textContent = v.count;
+
+    barWrapper.appendChild(bar);
+    row.appendChild(label);
+    row.appendChild(barWrapper);
+    row.appendChild(countLabel);
+    chart.appendChild(row);
+  });
+
+  supervisorCharts.appendChild(chart);
+}
+
+// PWA service worker
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
     navigator.serviceWorker

@@ -1,5 +1,6 @@
-
-* { box-sizing: border-box; }
+* {
+  box-sizing: border-box;
+}
 
 body {
   margin: 0;
@@ -8,7 +9,7 @@ body {
   color: #e2e8f0;
 }
 
-/* HEADER & BRANDING ------------------------------------------------ */
+/* HEADER */
 
 .app-header {
   background: linear-gradient(90deg, #0b3a2a, #14532d);
@@ -65,7 +66,7 @@ body {
   background-color: #f97316;
 }
 
-/* HERO ------------------------------------------------------------- */
+/* HERO */
 
 .hero {
   padding: 1.2rem 1.2rem 0.8rem;
@@ -85,7 +86,7 @@ body {
   opacity: 0.95;
 }
 
-/* TABS ------------------------------------------------------------- */
+/* TABS */
 
 .tabs {
   display: flex;
@@ -96,7 +97,7 @@ body {
 
 .tab-button {
   flex: 1;
-  max-width: 240px;
+  max-width: 260px;
   padding: 0.55rem 0.8rem;
   border-radius: 999px;
   border: 1px solid rgba(248, 250, 252, 0.4);
@@ -114,7 +115,7 @@ body {
   color: #0b3a2a;
 }
 
-/* MAIN LAYOUT ------------------------------------------------------ */
+/* MAIN LAYOUT */
 
 main {
   padding: 0 1.1rem 1.1rem;
@@ -171,13 +172,13 @@ textarea {
   margin-top: 0.35rem;
 }
 
-/* CHECKLIST / FIXTURE GROUPING ------------------------------------ */
+/* CHECKLIST / FIXTURES */
 
 .fixtures-container {
   margin-top: 0.85rem;
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;  /* space between Cabines / Lavabos / Urinoirs / Général sections */
+  gap: 1.25rem;
 }
 
 .fixture-section-title {
@@ -217,7 +218,7 @@ textarea {
   margin-top: 0.1rem;
 }
 
-/* Photos row inside each fixture ---------------------------------- */
+/* PHOTOS */
 
 .photos-row {
   display: flex;
@@ -243,7 +244,7 @@ textarea {
   margin-top: 0.2rem;
 }
 
-/* HISTORY LIST ----------------------------------------------------- */
+/* HISTORY LIST */
 
 .inspection-list {
   max-height: 420px;
@@ -263,7 +264,7 @@ textarea {
   color: #022c22;
 }
 
-/* BUTTONS & FOOTER ------------------------------------------------- */
+/* BUTTONS & FOOTER */
 
 .btn {
   margin-top: 0.9rem;
@@ -292,16 +293,30 @@ textarea {
   text-align: center;
 }
 
-/* TABS VISIBILITY -------------------------------------------------- */
+/* TABS VISIBILITY */
 
 .tab-content { display: none; }
 .tab-content.active { display: block; }
 
-/* RESPONSIVE ------------------------------------------------------ */
+/* SUPERVISOR */
+
+#supervisorCharts {
+  margin-top: 0.8rem;
+}
+
+/* RESPONSIVE */
 
 @media (max-width: 640px) {
-  .hero { padding: 1rem; }
-  .hero h1 { font-size: 1.1rem; }
-  main { padding: 0 0.7rem 0.9rem; }
-  .photos-row { flex-direction: column; }
+  .hero {
+    padding: 1rem;
+  }
+  .hero h1 {
+    font-size: 1.1rem;
+  }
+  main {
+    padding: 0 0.7rem 0.9rem;
+  }
+  .photos-row {
+    flex-direction: column;
+  }
 }

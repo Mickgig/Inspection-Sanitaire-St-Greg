@@ -31,12 +31,14 @@
 <nav class="tabs">
   <button class="tab-button active" data-tab="new">Nouvelle inspection</button>
   <button class="tab-button" data-tab="list">Historique</button>
+  <button class="tab-button" data-tab="supervisor">Superviseur</button>
 </nav>
 
 <main>
   <section id="tab-new" class="tab-content active">
     <div class="card">
       <h2>Nouvelle inspection</h2>
+
       <label for="inspectorInput">Nom complet de l’inspecteur</label>
       <input id="inspectorInput" type="text" placeholder="Prénom et nom">
 
@@ -47,7 +49,7 @@
       <div id="dynamicChecklist" class="fixtures-container"></div>
 
       <label for="notesInput">Commentaires / problèmes observés (optionnel)</label>
-      <textarea id="notesInput" rows="3"></textarea>
+      <textarea id="notesInput" rows="3" placeholder="Ex.: fuite, manque de papier, odeur, bris, etc."></textarea>
 
       <button id="saveInspectionBtn" class="btn primary">Enregistrer l’inspection</button>
       <div id="saveMessage" class="hint"></div>
@@ -61,10 +63,18 @@
       <div id="inspectionsList" class="inspection-list"></div>
     </div>
   </section>
+
+  <section id="tab-supervisor" class="tab-content">
+    <div class="card">
+      <h2>Vue superviseur</h2>
+      <div id="supervisorStats" class="hint"></div>
+      <div id="supervisorCharts"></div>
+    </div>
+  </section>
 </main>
 
 <footer class="app-footer">
-  <span>Arbraska • Module d’inspection interne • Version 1.4 (2025-11-18)</span>
+  <span>Arbraska • Module d’inspection interne • Version 2.0 (2025-11-18)</span>
 </footer>
 
 <script src="app.js"></script>
