@@ -91,8 +91,6 @@ label span {
 }
 
 input[type="text"],
-input[type="number"],
-input[type="email"],
 select,
 textarea {
   width: 100%;
@@ -173,6 +171,27 @@ textarea {
   margin-top: 0.1rem;
 }
 
+.photos-row {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+}
+
+.photos-row .col {
+  flex: 1;
+}
+
+.fixture-photo-label {
+  font-size: 0.7rem;
+  font-weight: 500;
+}
+
+.fixture-photo-input {
+  width: 100%;
+  font-size: 0.75rem;
+  margin-top: 0.15rem;
+}
+
 .inspection-list {
   max-height: 360px;
   overflow-y: auto;
@@ -192,6 +211,9 @@ textarea {
 
 @media (max-width: 600px) {
   .row {
+    flex-direction: column;
+  }
+  .photos-row {
     flex-direction: column;
   }
 }

@@ -1,4 +1,4 @@
-// Configuration (bilingual, per-item checklists: Option A)
+// Configuration (bilingual, per-item checklists, per-item photos)
 const CONFIG = {
   washrooms: [
     { id: "W001", name: "Toilette employé", location: "Bâtiment principal", numStalls: 1, numSinks: 1, numUrinals: 0 },
@@ -28,7 +28,7 @@ const CONFIG = {
   ],
 };
 
-const STORAGE_KEY = "sanitary_inspections_per_item_v1";
+const STORAGE_KEY = "sanitary_inspections_per_item_photos_v1";
 
 function loadInspections() {
   try {
@@ -83,8 +83,6 @@ const washroomSelect = document.getElementById("washroomSelect");
 const washroomInfo = document.getElementById("washroomInfo");
 const inspectorInput = document.getElementById("inspectorInput");
 const notesInput = document.getElementById("notesInput");
-const beforePhotoInput = document.getElementById("beforePhotoInput");
-const afterPhotoInput = document.getElementById("afterPhotoInput");
 const dynamicChecklist = document.getElementById("dynamicChecklist");
 const saveInspectionBtn = document.getElementById("saveInspectionBtn");
 const saveMessage = document.getElementById("saveMessage");
@@ -133,7 +131,7 @@ function populateWashrooms() {
 }
 populateWashrooms();
 
-// Build dynamic checklist per item
+// Build dynamic checklist per item, with per-item photos
 function buildDynamicChecklist() {
   const washroomId = washroomSelect.value;
   const w = CONFIG.washrooms.find(x => x.id === washroomId);
@@ -172,12 +170,52 @@ function buildDynamicChecklist() {
       div.className = "checklist-item";
       const id = `${type}-${index || 0}-${task.id}`;
       div.innerHTML = `
-        <input type="checkbox" class="fixture-checkbox" id="${id}" 
+        <input type="checkbox" class="fixture-checkbox" id="${id}"
                data-type="${type}" data-index="${index || 0}" data-task-id="${task.id}">
         <label for="${id}">${task.fr} / ${task.en}</label>
       `;
       group.appendChild(div);
     });
+
+    // Photos row (before/after) for this fixture
+    const photosRow = document.createElement("div");
+    photosRow.className = "photos-row";
+
+    const beforeCol = document.createElement("div");
+    beforeCol.className = "col";
+    const beforeLabel = document.createElement("div");
+    beforeLabel.className = "fixture-photo-label";
+    beforeLabel.textContent = "Photo avant / Before";
+    const beforeInput = document.createElement("input");
+    beforeInput.type = "file";
+    beforeInput.accept = "image/*";
+    beforeInput.capture = "environment"; // hint to use camera on iPad
+    beforeInput.className = "fixture-photo-input fixture-photo-before";
+    beforeInput.id = `${type}-${index || 0}-before`;
+    beforeInput.dataset.type = type;
+    beforeInput.dataset.index = String(index || 0);
+    beforeCol.appendChild(beforeLabel);
+    beforeCol.appendChild(beforeInput);
+
+    const afterCol = document.createElement("div");
+    afterCol.className = "col";
+    const afterLabel = document.createElement("div");
+    afterLabel.className = "fixture-photo-label";
+    afterLabel.textContent = "Photo après / After";
+    const afterInput = document.createElement("input");
+    afterInput.type = "file";
+    afterInput.accept = "image/*";
+    afterInput.capture = "environment"; // hint to use camera on iPad
+    afterInput.className = "fixture-photo-input fixture-photo-after";
+    afterInput.id = `${type}-${index || 0}-after`;
+    afterInput.dataset.type = type;
+    afterInput.dataset.index = String(index || 0);
+    afterCol.appendChild(afterLabel);
+    afterCol.appendChild(afterInput);
+
+    photosRow.appendChild(beforeCol);
+    photosRow.appendChild(afterCol);
+    group.appendChild(photosRow);
 
     return group;
   }
@@ -258,7 +296,7 @@ saveInspectionBtn.addEventListener("click", async () => {
 
   function getChecked(type, index) {
     return checkboxes
-      .filter(cb => cb.dataset.type === type && String(cb.dataset.index) === String(index) && cb.checked)
+      .filter(cb => cb.dataset.type === type && String(cb.dataset.index) == String(index) && cb.checked)
       .map(cb => cb.dataset.taskId);
   }
 
@@ -296,41 +334,53 @@ saveInspectionBtn.addEventListener("click", async () => {
     return;
   }
 
-  const beforeFile = beforePhotoInput.files[0] || null;
-  const afterFile = afterPhotoInput.files[0] || null;
-
-  let beforeBase64 = null;
-  let afterBase64 = null;
-  try {
-    [beforeBase64, afterBase64] = await Promise.all([
+  // Collect photos per fixture
+  async function getPhotosFor(type, index) {
+    const beforeInput = document.getElementById(`${type}-${index}-before`);
+    const afterInput = document.getElementById(`${type}-${index}-after`);
+    const beforeFile = beforeInput && beforeInput.files[0] ? beforeInput.files[0] : null;
+    const afterFile = afterInput && afterInput.files[0] ? afterInput.files[0] : null;
+    const [beforeBase64, afterBase64] = await Promise.all([
       base64FromFile(beforeFile),
       base64FromFile(afterFile),
     ]);
-  } catch (e) {
-    console.error(e);
+    return { beforePhoto: beforeBase64, afterPhoto: afterBase64 };
   }
 
   const stalls = [];
   for (let i = 1; i <= w.numStalls; i++) {
+    const photos = await getPhotosFor("stall", i);
     stalls.push({
       index: i,
       completedTaskIds: getChecked("stall", i),
+      beforePhoto: photos.beforePhoto,
+      afterPhoto: photos.afterPhoto,
     });
   }
+
   const sinks = [];
   for (let i = 1; i <= w.numSinks; i++) {
+    const photos = await getPhotosFor("sink", i);
     sinks.push({
       index: i,
       completedTaskIds: getChecked("sink", i),
+      beforePhoto: photos.beforePhoto,
+      afterPhoto: photos.afterPhoto,
     });
   }
+
   const urinals = [];
   for (let i = 1; i <= w.numUrinals; i++) {
+    const photos = await getPhotosFor("urinal", i);
     urinals.push({
       index: i,
       completedTaskIds: getChecked("urinal", i),
+      beforePhoto: photos.beforePhoto,
+      afterPhoto: photos.afterPhoto,
     });
   }
+
+  const generalPhotos = await getPhotosFor("general", 0);
 
   const inspection = {
     id: "I_" + Date.now(),
@@ -341,9 +391,9 @@ saveInspectionBtn.addEventListener("click", async () => {
     sinks,
     urinals,
     generalTasks: generalChecked,
+    generalBeforePhoto: generalPhotos.beforePhoto,
+    generalAfterPhoto: generalPhotos.afterPhoto,
     notes,
-    beforePhoto: beforeBase64,
-    afterPhoto: afterBase64,
   };
 
   const list = loadInspections();
@@ -355,9 +405,8 @@ saveInspectionBtn.addEventListener("click", async () => {
 
   // Reset fields
   notesInput.value = "";
-  beforePhotoInput.value = "";
-  afterPhotoInput.value = "";
   document.querySelectorAll(".fixture-checkbox").forEach(cb => (cb.checked = false));
+  document.querySelectorAll(".fixture-photo-input").forEach(inp => (inp.value = ""));
 });
 
 // Render inspections list

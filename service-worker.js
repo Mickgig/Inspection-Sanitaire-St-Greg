@@ -1,4 +1,4 @@
-const CACHE_NAME = "sanitary-inspection-per-item-v1";
+const CACHE_NAME = "sanitary-inspection-per-item-photos-v1";
 const ASSETS = [
   "./",
   "./index.html",
