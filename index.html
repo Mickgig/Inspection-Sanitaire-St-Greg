@@ -19,7 +19,7 @@
 
 <nav class="tabs">
   <button class="tab-button active" data-tab="new">Nouvelle inspection<br><span>New inspection</span></button>
-  <button class="tab-button" data-tab="list">Inspections<br><span>History</span></button>
+  <button class="tab-button" data-tab="list">Historique<br><span>History</span></button>
 </nav>
 
 <main>
@@ -33,29 +33,11 @@
 
       <label for="washroomSelect">Toilette / Washroom</label>
       <select id="washroomSelect"></select>
+      <div id="washroomInfo" class="hint"></div>
 
-      <div class="row">
-        <div class="col">
-          <label for="areaTypeSelect">Zone / Area</label>
-          <select id="areaTypeSelect">
-            <option value="Cabine / Stall">Cabine / Stall</option>
-            <option value="Lavabo / Sink">Lavabo / Sink</option>
-            <option value="Urinoir / Urinal">Urinoir / Urinal</option>
-            <option value="Général / General">Général / General</option>
-          </select>
-        </div>
-        <div class="col">
-          <label for="areaNumberInput">Numéro (cabine, lavabo, etc.)<br><span>Number (stall, sink, etc.)</span></label>
-          <input id="areaNumberInput" type="number" min="1" placeholder="Laisser vide pour général / Leave blank for general">
-        </div>
-      </div>
+      <div id="dynamicChecklist" class="fixtures-container"></div>
 
-      <div id="areaHint" class="hint"></div>
-
-      <label>Tâches à effectuer / Tasks to complete</label>
-      <div id="checklistContainer" class="checklist"></div>
-
-      <label for="notesInput">Problèmes ou remarques / Issues or notes</label>
+      <label for="notesInput">Problèmes ou remarques (optionnel) / Issues or notes (optional)</label>
       <textarea id="notesInput" rows="3" placeholder="Ex.: fuite, manque de papier, odeur, etc. / e.g. leak, missing paper, odor, etc."></textarea>
 
       <div class="row">

@@ -1,4 +1,4 @@
-// Configuration (bilingual, same as before)
+// Configuration (bilingual, per-item checklists: Option A)
 const CONFIG = {
   washrooms: [
     { id: "W001", name: "Toilette employé", location: "Bâtiment principal", numStalls: 1, numSinks: 1, numUrinals: 0 },
@@ -28,10 +28,7 @@ const CONFIG = {
   ],
 };
 
-// Backend endpoint for automatic daily report sync (server you or IT will host)
-const SYNC_ENDPOINT = "https://your-server.example.com/api/inspections"; // <- change this when you have a backend
-const STORAGE_KEY = "sanitary_inspections_v2";
-const LAST_SYNC_KEY = "sanitary_last_sync_v2";
+const STORAGE_KEY = "sanitary_inspections_per_item_v1";
 
 function loadInspections() {
   try {
@@ -52,14 +49,6 @@ function saveInspections(list) {
   }
 }
 
-function setLastSyncDate(dateISO) {
-  localStorage.setItem(LAST_SYNC_KEY, dateISO);
-}
-
-function getLastSyncDate() {
-  return localStorage.getItem(LAST_SYNC_KEY);
-}
-
 // Utils
 function formatDateTime(dt) {
   return dt.toLocaleString("fr-CA", {
@@ -69,11 +58,6 @@ function formatDateTime(dt) {
     hour: "2-digit",
     minute: "2-digit",
   });
-}
-
-function getTodayISO() {
-  const now = new Date();
-  return now.toISOString().slice(0, 10);
 }
 
 function base64FromFile(file) {
@@ -89,12 +73,6 @@ function base64FromFile(file) {
   });
 }
 
-function filteredChecklist(areaType) {
-  return CONFIG.checklistItems.filter(item =>
-    item.appliesTo === "Tous / All" || item.appliesTo === areaType
-  );
-}
-
 // DOM elements
 const tabButtons = document.querySelectorAll(".tab-button");
 const tabContents = document.querySelectorAll(".tab-content");
@@ -102,14 +80,12 @@ const onlineStatusEl = document.getElementById("onlineStatus");
 const onlineTextEl = document.getElementById("onlineText");
 
 const washroomSelect = document.getElementById("washroomSelect");
-const areaTypeSelect = document.getElementById("areaTypeSelect");
-const areaNumberInput = document.getElementById("areaNumberInput");
+const washroomInfo = document.getElementById("washroomInfo");
 const inspectorInput = document.getElementById("inspectorInput");
 const notesInput = document.getElementById("notesInput");
 const beforePhotoInput = document.getElementById("beforePhotoInput");
 const afterPhotoInput = document.getElementById("afterPhotoInput");
-const checklistContainer = document.getElementById("checklistContainer");
-const areaHint = document.getElementById("areaHint");
+const dynamicChecklist = document.getElementById("dynamicChecklist");
 const saveInspectionBtn = document.getElementById("saveInspectionBtn");
 const saveMessage = document.getElementById("saveMessage");
 
@@ -136,7 +112,6 @@ function updateOnlineStatus() {
   if (navigator.onLine) {
     onlineStatusEl.style.backgroundColor = "#16a34a";
     onlineTextEl.textContent = "En ligne / Online";
-    attemptSync(); // try to sync when we come online
   } else {
     onlineStatusEl.style.backgroundColor = "#dc2626";
     onlineTextEl.textContent = "Hors ligne / Offline";
@@ -158,66 +133,105 @@ function populateWashrooms() {
 }
 populateWashrooms();
 
-// Checklist rendering
-function renderChecklist() {
-  const areaType = areaTypeSelect.value;
-  const list = filteredChecklist(areaType);
-
-  checklistContainer.innerHTML = "";
-  list.forEach(item => {
-    const div = document.createElement("div");
-    div.className = "checklist-item";
-    const id = "chk_" + item.id;
-    div.innerHTML = `
-      <input type="checkbox" id="${id}" data-id="${item.id}">
-      <label for="${id}">${item.fr} / ${item.en}</label>
-    `;
-    checklistContainer.appendChild(div);
-  });
-
-  // Hint about max numbers
-  const selectedId = washroomSelect.value;
-  const w = CONFIG.washrooms.find(x => x.id === selectedId);
+// Build dynamic checklist per item
+function buildDynamicChecklist() {
+  const washroomId = washroomSelect.value;
+  const w = CONFIG.washrooms.find(x => x.id === washroomId);
   if (!w) {
-    areaHint.textContent = "";
+    washroomInfo.textContent = "";
+    dynamicChecklist.innerHTML = "";
     return;
   }
-  if (areaType === "Cabine / Stall") {
-    areaHint.textContent = `Max: ${w.numStalls} cabine(s) dans cette toilette. / Max: ${w.numStalls} stall(s) in this washroom.`;
-  } else if (areaType === "Lavabo / Sink") {
-    areaHint.textContent = `Max: ${w.numSinks} lavabo(s) dans cette toilette. / Max: ${w.numSinks} sink(s) in this washroom.`;
-  } else if (areaType === "Urinoir / Urinal") {
-    areaHint.textContent = `Max: ${w.numUrinals} urinoir(s) dans cette toilette. / Max: ${w.numUrinals} urinal(s) in this washroom.`;
-  } else {
-    areaHint.textContent = "Laissez le numéro vide pour une inspection générale. / Leave number blank for a general inspection.";
+
+  washroomInfo.textContent = `Cabines / Stalls: ${w.numStalls} • Lavabos / Sinks: ${w.numSinks} • Urinoirs / Urinals: ${w.numUrinals}`;
+
+  const stallTasks = CONFIG.checklistItems.filter(i => i.appliesTo === "Cabine / Stall");
+  const sinkTasks = CONFIG.checklistItems.filter(i => i.appliesTo === "Lavabo / Sink");
+  const urinalTasks = CONFIG.checklistItems.filter(i => i.appliesTo === "Urinoir / Urinal");
+  const generalTasks = CONFIG.checklistItems.filter(i => i.appliesTo === "Général / General" || i.appliesTo === "Tous / All");
+
+  dynamicChecklist.innerHTML = "";
+
+  function createFixtureGroup(type, index, tasks) {
+    const group = document.createElement("div");
+    group.className = "fixture-group";
+    group.dataset.type = type;
+    group.dataset.index = String(index);
+    const header = document.createElement("div");
+    header.className = "fixture-group-header";
+    const labelType =
+      type === "stall" ? "Cabine / Stall" :
+      type === "sink" ? "Lavabo / Sink" :
+      type === "urinal" ? "Urinoir / Urinal" :
+      "Général / General";
+    header.textContent = `${labelType}${index ? " #" + index : ""}`;
+    group.appendChild(header);
+
+    tasks.forEach(task => {
+      const div = document.createElement("div");
+      div.className = "checklist-item";
+      const id = `${type}-${index || 0}-${task.id}`;
+      div.innerHTML = `
+        <input type="checkbox" class="fixture-checkbox" id="${id}" 
+               data-type="${type}" data-index="${index || 0}" data-task-id="${task.id}">
+        <label for="${id}">${task.fr} / ${task.en}</label>
+      `;
+      group.appendChild(div);
+    });
+
+    return group;
+  }
+
+  // Stalls
+  if (w.numStalls > 0 && stallTasks.length) {
+    const title = document.createElement("div");
+    title.className = "fixture-section-title";
+    title.textContent = "Cabines / Stalls";
+    dynamicChecklist.appendChild(title);
+    for (let i = 1; i <= w.numStalls; i++) {
+      dynamicChecklist.appendChild(createFixtureGroup("stall", i, stallTasks));
+    }
+  }
+
+  // Sinks
+  if (w.numSinks > 0 && sinkTasks.length) {
+    const title = document.createElement("div");
+    title.className = "fixture-section-title";
+    title.textContent = "Lavabos / Sinks";
+    dynamicChecklist.appendChild(title);
+    for (let i = 1; i <= w.numSinks; i++) {
+      dynamicChecklist.appendChild(createFixtureGroup("sink", i, sinkTasks));
+    }
+  }
+
+  // Urinals
+  if (w.numUrinals > 0 && urinalTasks.length) {
+    const title = document.createElement("div");
+    title.className = "fixture-section-title";
+    title.textContent = "Urinoirs / Urinals";
+    dynamicChecklist.appendChild(title);
+    for (let i = 1; i <= w.numUrinals; i++) {
+      dynamicChecklist.appendChild(createFixtureGroup("urinal", i, urinalTasks));
+    }
+  }
+
+  // General
+  if (generalTasks.length) {
+    const title = document.createElement("div");
+    title.className = "fixture-section-title";
+    title.textContent = "Général / General";
+    dynamicChecklist.appendChild(title);
+    dynamicChecklist.appendChild(createFixtureGroup("general", 0, generalTasks));
   }
 }
 
-areaTypeSelect.addEventListener("change", renderChecklist);
-washroomSelect.addEventListener("change", renderChecklist);
-renderChecklist();
+washroomSelect.addEventListener("change", buildDynamicChecklist);
+buildDynamicChecklist();
 
-// Validate area number
-function areaNumberIsValid(areaType, washroomId, num) {
-  if (!num || isNaN(num)) return true; // general / blank is ok
-  const w = CONFIG.washrooms.find(x => x.id === washroomId);
-  if (!w) return true;
-  if (areaType === "Cabine / Stall") {
-    return num >= 1 && num <= w.numStalls;
-  } else if (areaType === "Lavabo / Sink") {
-    return num >= 1 && num <= w.numSinks;
-  } else if (areaType === "Urinoir / Urinal") {
-    return num >= 1 && num <= w.numUrinals;
-  }
-  return true;
-}
-
-// Save inspection
+// Save inspection with validation: all components required
 saveInspectionBtn.addEventListener("click", async () => {
   const inspector = inspectorInput.value.trim();
   const washroomId = washroomSelect.value;
-  const areaType = areaTypeSelect.value;
-  const areaNumber = areaNumberInput.value ? parseInt(areaNumberInput.value, 10) : null;
   const notes = notesInput.value.trim();
 
   if (!washroomId) {
@@ -228,14 +242,59 @@ saveInspectionBtn.addEventListener("click", async () => {
     saveMessage.textContent = "Veuillez entrer le nom de l’inspecteur. / Please enter the inspector name.";
     return;
   }
-  if (!areaNumberIsValid(areaType, washroomId, areaNumber)) {
-    saveMessage.textContent = "Numéro invalide pour cette zone et toilette. / Invalid number for this area and washroom.";
+
+  const w = CONFIG.washrooms.find(x => x.id === washroomId);
+  if (!w) {
+    saveMessage.textContent = "Toilette invalide. / Invalid washroom.";
     return;
   }
 
-  const checkedItems = Array.from(checklistContainer.querySelectorAll("input[type='checkbox']"))
-    .filter(chk => chk.checked)
-    .map(chk => chk.dataset.id);
+  const stallTasks = CONFIG.checklistItems.filter(i => i.appliesTo === "Cabine / Stall");
+  const sinkTasks = CONFIG.checklistItems.filter(i => i.appliesTo === "Lavabo / Sink");
+  const urinalTasks = CONFIG.checklistItems.filter(i => i.appliesTo === "Urinoir / Urinal");
+  const generalTasks = CONFIG.checklistItems.filter(i => i.appliesTo === "Général / General" || i.appliesTo === "Tous / All");
+
+  const checkboxes = Array.from(document.querySelectorAll(".fixture-checkbox"));
+
+  function getChecked(type, index) {
+    return checkboxes
+      .filter(cb => cb.dataset.type === type && String(cb.dataset.index) === String(index) && cb.checked)
+      .map(cb => cb.dataset.taskId);
+  }
+
+  // Validate stalls
+  for (let i = 1; i <= w.numStalls; i++) {
+    const checked = getChecked("stall", i);
+    if (checked.length < stallTasks.length) {
+      saveMessage.textContent = `Toutes les tâches doivent être cochées pour la cabine #${i}. / All tasks must be checked for stall #${i}.`;
+      return;
+    }
+  }
+
+  // Validate sinks
+  for (let i = 1; i <= w.numSinks; i++) {
+    const checked = getChecked("sink", i);
+    if (checked.length < sinkTasks.length) {
+      saveMessage.textContent = `Toutes les tâches doivent être cochées pour le lavabo #${i}. / All tasks must be checked for sink #${i}.`;
+      return;
+    }
+  }
+
+  // Validate urinals
+  for (let i = 1; i <= w.numUrinals; i++) {
+    const checked = getChecked("urinal", i);
+    if (checked.length < urinalTasks.length) {
+      saveMessage.textContent = `Toutes les tâches doivent être cochées pour l’urinoir #${i}. / All tasks must be checked for urinal #${i}.`;
+      return;
+    }
+  }
+
+  // Validate general
+  const generalChecked = getChecked("general", 0);
+  if (generalTasks.length && generalChecked.length < generalTasks.length) {
+    saveMessage.textContent = "Toutes les tâches générales doivent être cochées. / All general tasks must be checked.";
+    return;
+  }
 
   const beforeFile = beforePhotoInput.files[0] || null;
   const afterFile = afterPhotoInput.files[0] || null;
@@ -251,19 +310,40 @@ saveInspectionBtn.addEventListener("click", async () => {
     console.error(e);
   }
 
-  const now = new Date();
+  const stalls = [];
+  for (let i = 1; i <= w.numStalls; i++) {
+    stalls.push({
+      index: i,
+      completedTaskIds: getChecked("stall", i),
+    });
+  }
+  const sinks = [];
+  for (let i = 1; i <= w.numSinks; i++) {
+    sinks.push({
+      index: i,
+      completedTaskIds: getChecked("sink", i),
+    });
+  }
+  const urinals = [];
+  for (let i = 1; i <= w.numUrinals; i++) {
+    urinals.push({
+      index: i,
+      completedTaskIds: getChecked("urinal", i),
+    });
+  }
+
   const inspection = {
-    id: "I_" + now.getTime(),
-    dateTime: now.toISOString(),
+    id: "I_" + Date.now(),
+    dateTime: new Date().toISOString(),
     inspector,
     washroomId,
-    areaType,
-    areaNumber,
-    completedTaskIds: checkedItems,
+    stalls,
+    sinks,
+    urinals,
+    generalTasks: generalChecked,
     notes,
     beforePhoto: beforeBase64,
     afterPhoto: afterBase64,
-    synced: false,
   };
 
   const list = loadInspections();
@@ -273,22 +353,17 @@ saveInspectionBtn.addEventListener("click", async () => {
   saveMessage.textContent = "Inspection enregistrée localement. / Inspection saved locally.";
   setTimeout(() => (saveMessage.textContent = ""), 3000);
 
-  // Reset some fields
+  // Reset fields
   notesInput.value = "";
   beforePhotoInput.value = "";
   afterPhotoInput.value = "";
-  checklistContainer.querySelectorAll("input[type='checkbox']").forEach(chk => (chk.checked = false));
-
-  // Try sync in background if possible
-  attemptSync();
+  document.querySelectorAll(".fixture-checkbox").forEach(cb => (cb.checked = false));
 });
 
 // Render inspections list
 function renderInspectionsList() {
   const list = loadInspections();
-  const today = getTodayISO();
-  const todays = list.filter(i => i.dateTime.slice(0, 10) === today);
-  inspectionsSummary.textContent = `${todays.length} inspection(s) aujourd’hui. / ${todays.length} inspection(s) today.`;
+  inspectionsSummary.textContent = `${list.length} inspection(s) enregistrée(s) sur cet appareil. / ${list.length} inspection(s) saved on this device.`;
 
   inspectionsList.innerHTML = "";
   const sorted = [...list].sort((a, b) => new Date(b.dateTime) - new Date(a.dateTime));
@@ -296,76 +371,26 @@ function renderInspectionsList() {
     const w = CONFIG.washrooms.find(x => x.id === item.washroomId);
     const washroomName = w ? w.name : item.washroomId;
     const dt = new Date(item.dateTime);
-    const tasks = item.completedTaskIds
-      .map(id => {
-        const t = CONFIG.checklistItems.find(x => x.id === id);
-        return t ? `${t.fr} / ${t.en}` : id;
-      })
-      .join(", ");
+
+    const stallCount = item.stalls ? item.stalls.length : 0;
+    const sinkCount = item.sinks ? item.sinks.length : 0;
+    const urinalCount = item.urinals ? item.urinals.length : 0;
+    const generalCount = item.generalTasks ? item.generalTasks.length : 0;
+
     const div = document.createElement("div");
     div.className = "inspection-item";
     div.innerHTML = `
       <strong>${formatDateTime(dt)} – ${washroomName}</strong>
-      <div>Zone / Area : ${item.areaType}${item.areaNumber ? " #" + item.areaNumber : ""}</div>
       <div>Inspecteur / Inspector : ${item.inspector}</div>
-      <div>Tâches / Tasks : ${tasks || "Aucune / None"}</div>
+      <div>Cabines / Stalls inspectées : ${stallCount}</div>
+      <div>Lavabos / Sinks inspectés : ${sinkCount}</div>
+      <div>Urinoirs / Urinals inspectés : ${urinalCount}</div>
+      <div>Tâches générales complétées : ${generalCount}</div>
       <div>Notes : ${item.notes || "Aucune / None"}</div>
     `;
     inspectionsList.appendChild(div);
   });
 }
-
-// Automatic sync logic (for backend daily report)
-async function attemptSync() {
-  // If no real endpoint configured, do nothing
-  if (!SYNC_ENDPOINT || SYNC_ENDPOINT.includes("your-server.example.com")) {
-    return;
-  }
-  if (!navigator.onLine) return;
-
-  const today = getTodayISO();
-  const lastSync = getLastSyncDate();
-  // Only one sync per day from this device
-  if (lastSync === today) return;
-
-  const list = loadInspections();
-  const unsynced = list.filter(i => !i.synced);
-
-  if (!unsynced.length) {
-    setLastSyncDate(today);
-    return;
-  }
-
-  try {
-    const payload = {
-      deviceId: "ipad-" + (navigator.userAgent || "").slice(0, 40),
-      syncedAt: new Date().toISOString(),
-      inspections: unsynced,
-    };
-    const resp = await fetch(SYNC_ENDPOINT, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-    if (resp.ok) {
-      // Mark them as synced locally
-      const updated = list.map(i =>
-        unsynced.some(u => u.id === i.id) ? { ...i, synced: true } : i
-      );
-      saveInspections(updated);
-      setLastSyncDate(today);
-    } else {
-      console.error("Sync failed with status", resp.status);
-    }
-  } catch (err) {
-    console.error("Sync error", err);
-  }
-}
-
-// Try sync shortly after load
-window.addEventListener("load", () => {
-  attemptSync();
-});
 
 // PWA: register service worker if available
 if ("serviceWorker" in navigator) {

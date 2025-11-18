@@ -137,13 +137,28 @@ textarea {
   margin-top: 0.35rem;
 }
 
-.checklist {
+.fixtures-container {
+  margin-top: 0.5rem;
+}
+
+.fixture-section-title {
+  margin-top: 0.75rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.fixture-group {
   border-radius: 0.5rem;
   border: 1px solid #e5e7eb;
   padding: 0.45rem 0.5rem;
-  max-height: 220px;
-  overflow-y: auto;
+  margin-top: 0.35rem;
   background-color: #f9fafb;
+}
+
+.fixture-group-header {
+  font-size: 0.8rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
 }
 
 .checklist-item {
